@@ -19,7 +19,7 @@ func main() {
 	fmt.Printf("We have a total of %v tickets and %v are still available\n", conferenceTickets, remainingTickets)
 	fmt.Println("Get your tickets here to attend")
 
-	for {
+	for remainingTickets > 0 && len(bookings) < 50 {
 		var firstName string
 		var lastName string
 		var email string
@@ -37,22 +37,54 @@ func main() {
 		fmt.Println("Enter number of tickets:")
 		fmt.Scan(&userTickets)
 
-		remainingTickets -= userTickets
-		bookings = append(bookings, firstName+" "+lastName)
+		isValidName := len(firstName) >= 2 && len(lastName) >= 2
+		isValidEmail := strings.Contains(email, "@")
+		isValidTicketNumber := userTickets > 0 && userTickets <= remainingTickets
 
-		fmt.Printf("Thank you %v %v for booking so many tickets. You will receive a confirmation email at %v\n", firstName, lastName, email)
-		fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
+		if isValidName && isValidEmail && isValidTicketNumber {
+			remainingTickets -= userTickets
+			bookings = append(bookings, firstName+" "+lastName)
 
-		firstNames := []string{}
-		for _, booking := range bookings {
-			var names = strings.Fields(booking)
-			firstNames = append(firstNames, names[0])
-		}
-		fmt.Printf("There first names of bookings are: %v\n", firstNames)
+			fmt.Printf("Thank you %v %v for booking so many tickets. You will receive a confirmation email at %v\n", firstName, lastName, email)
+			fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
 
-		if remainingTickets == 0 {
-			fmt.Println("Our conference is sold out. Come back next year.")
-			break
+			firstNames := []string{}
+			for _, booking := range bookings {
+				var names = strings.Fields(booking)
+				firstNames = append(firstNames, names[0])
+			}
+			fmt.Printf("There first names of bookings are: %v\n", firstNames)
+
+			if remainingTickets == 0 {
+				fmt.Println("Our conference is sold out. Come back next year.")
+				break
+			}
+		} else {
+			if !isValidName {
+				fmt.Println("First or last name you entered is too short")
+			}
+			if !isValidEmail {
+				fmt.Println("Email address you entered doesn't contain @ sign")
+			}
+			if !isValidTicketNumber {
+				fmt.Printf("We ony have %v tickets remaining, so you can't book %v tickets\n", remainingTickets, userTickets)
+			}
+			// unlike `break` it doesn't stop the loop but goes to another iteration in the loop
+			continue
 		}
 	}
+
+	// city := "London"
+	// switch city {
+	// case "New Yourk":
+	// 	//
+	// case "Singapore", "Hong Kong":
+	// 	//
+	// case " London", "Berlin":
+	// 	//
+	// case "Mxico City":
+	// 	//
+	// default:
+	// 	fmt.Println("No valid city selected")
+	// }
 }
