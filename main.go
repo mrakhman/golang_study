@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -18,6 +19,8 @@ type UserData struct {
 	numberOfTickets uint
 }
 
+var wg = sync.WaitGroup{}
+
 func main() {
 	// var conferenceName = "Go Conference"
 	// same as ^
@@ -26,34 +29,37 @@ func main() {
 
 	fmt.Printf("conferenceTickets is %T, remainingTickets is %T, conferenceName is %T\n", conferenceTickets, remainingTickets, conferenceName)
 
-	for remainingTickets > 0 && len(bookings) < 50 {
-		firstName, lastName, email, userTickets := getUserInput()
-		isValidName, isValidEmail, isValidTicketNumber := ValidateUserInput(firstName, lastName, email, userTickets, remainingTickets)
-		if isValidName && isValidEmail && isValidTicketNumber {
-			bookings = bookTicket(userTickets, firstName, lastName, email)
-			go sendTicket(userTickets, firstName, lastName, email)
+	// for remainingTickets > 0 && len(bookings) < 50 {
+	firstName, lastName, email, userTickets := getUserInput()
+	isValidName, isValidEmail, isValidTicketNumber := ValidateUserInput(firstName, lastName, email, userTickets, remainingTickets)
+	if isValidName && isValidEmail && isValidTicketNumber {
+		bookings = bookTicket(userTickets, firstName, lastName, email)
 
-			firstNames := getFirstNames()
-			fmt.Printf("There first names of bookings are: %v\n", firstNames)
+		wg.Add(1) // number of wait groups
+		go sendTicket(userTickets, firstName, lastName, email)
 
-			if remainingTickets == 0 {
-				fmt.Println("Our conference is sold out. Come back next year.")
-				break
-			}
-		} else {
-			if !isValidName {
-				fmt.Println("First or last name you entered is too short")
-			}
-			if !isValidEmail {
-				fmt.Println("Email address you entered doesn't contain @ sign")
-			}
-			if !isValidTicketNumber {
-				fmt.Printf("We ony have %v tickets remaining, so you can't book %v tickets\n", remainingTickets, userTickets)
-			}
-			// unlike `break` it doesn't stop the loop but goes to another iteration in the loop
-			continue
+		firstNames := getFirstNames()
+		fmt.Printf("There first names of bookings are: %v\n", firstNames)
+
+		if remainingTickets == 0 {
+			fmt.Println("Our conference is sold out. Come back next year.")
+			// break
 		}
+	} else {
+		if !isValidName {
+			fmt.Println("First or last name you entered is too short")
+		}
+		if !isValidEmail {
+			fmt.Println("Email address you entered doesn't contain @ sign")
+		}
+		if !isValidTicketNumber {
+			fmt.Printf("We ony have %v tickets remaining, so you can't book %v tickets\n", remainingTickets, userTickets)
+		}
+		// unlike `break` it doesn't stop the loop but goes to another iteration in the loop
+		// continue
 	}
+	wg.Wait()
+	// }
 
 	// city := "London"
 	// switch city {
@@ -130,4 +136,5 @@ func sendTicket(userTickets uint, firstName string, lastName string, email strin
 	fmt.Println("#########")
 	fmt.Printf("Sending ticket:\n%v\nto email address %v\n", ticket, email)
 	fmt.Println("#########")
+	wg.Done()
 }
